@@ -22,6 +22,12 @@ type user struct {
 	Email     string
 }
 
+func home(w http.ResponseWriter, r *http.Request) {
+	tpl, err := template.ParseGlob("./templates/*")
+	logErr(err)
+	logErr(tpl.ExecuteTemplate(w, "home.html", nil))
+}
+
 func index(w http.ResponseWriter, r *http.Request) {
 	stmt, err := db.Prepare(`
 		SELECT id, username, first_name, last_name, email
@@ -41,7 +47,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 		users = append(users, u)
 	}
 
-	tpl, err := template.New("index.html").ParseFiles("index.html")
+	tpl, err := template.ParseGlob("./templates/*")
 	logErr(err)
 	logErr(tpl.ExecuteTemplate(w, "index.html", users))
 }
@@ -60,7 +66,7 @@ func show(w http.ResponseWriter, r *http.Request) {
 	err = row.Scan(&u.ID, &u.UserName, &u.FirstName, &u.LastName, &u.Email)
 	logErr(err)
 
-	tpl, err := template.New("show.html").ParseFiles("show.html")
+	tpl, err := template.ParseGlob("./templates/*")
 	logErr(err)
 	logErr(tpl.ExecuteTemplate(w, "show.html", u))
 }
@@ -70,6 +76,7 @@ func main() {
 	fatalErr(err)
 
 	r := mux.NewRouter()
+	r.HandleFunc("/", home).Methods("GET").Name("home")
 	r.HandleFunc("/users", index).Methods("GET").Name("users.index")
 	r.HandleFunc("/users/{id:[0-9]+}", show).Methods("GET").Name("users.show")
 	http.Handle("/", r)
