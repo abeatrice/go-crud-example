@@ -1,0 +1,14 @@
+version: '3.0'
+services:
+  app:
+    build: .
+    ports: 
+     - 8080:8080
+    networks:
+      - backend
+      - frontend
+networks:
+  backend:
+    external: true
+  frontend:
+    external: true
