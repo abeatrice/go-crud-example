@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/gorilla/mux"
@@ -16,15 +17,15 @@ import (
 
 var db *gorm.DB
 var err error
+var validate *validator.Validate
 
 // User ...
 type User struct {
 	gorm.Model
-	ID        int
-	UserName  string
-	FirstName string
-	LastName  string
-	Email     string
+	UserName  string `validate:"required"`
+	FirstName string `validate:"required"`
+	LastName  string `validate:"required"`
+	Email     string `validate:"required,email"`
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +46,18 @@ func show(w http.ResponseWriter, r *http.Request) {
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
-	display(w, "create", nil)
+	logErr(r.ParseForm())
+	data := struct {
+		Old User
+	}{
+		User{
+			UserName:  r.Form.Get("UserName"),
+			FirstName: r.Form.Get("FirstName"),
+			LastName:  r.Form.Get("LastName"),
+			Email:     r.Form.Get("Email"),
+		},
+	}
+	display(w, "create", data)
 }
 
 func store(w http.ResponseWriter, r *http.Request) {
@@ -56,11 +68,18 @@ func store(w http.ResponseWriter, r *http.Request) {
 		LastName:  r.Form.Get("LastName"),
 		Email:     r.Form.Get("Email"),
 	}
+	err = validate.Struct(user)
+	if err != nil {
+		create(w, r)
+		return
+	}
+
 	db.Create(&user)
 	index(w, r)
 }
 
 func main() {
+	validate = validator.New()
 	db, err = gorm.Open(mysql.Open("root:password@tcp(mysql)/local?parseTime=true"), &gorm.Config{})
 	fatalErr(err)
 
@@ -72,8 +91,8 @@ func main() {
 	r.HandleFunc("/users/{id:[0-9]+}", show).Methods("GET").Name("users.show")
 	r.HandleFunc("/users/create", create).Methods("GET").Name("users.create")
 	r.HandleFunc("/users", store).Methods("POST").Name("users.store")
-	http.Handle("/", r)
 
+	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
 
