@@ -7,8 +7,8 @@ This is an example crud application written in go to manage a resource: user
  - [docker-compose](https://docs.docker.com/compose/)
 
 ## Local Development
-CompileDaemon is used to recomile when .go files are updated. Run docker compose up to start the server and listen for changes to files.
+ - CompileDaemon will recompile and run the app server when .go files are updated.
+ - docker-compose will create services: database, app server
 ```sh
-$ cp .env.example .env
 $ docker-compose up --build
 ```

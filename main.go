@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
@@ -80,7 +81,7 @@ func store(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	validate = validator.New()
-	db, err = gorm.Open(mysql.Open("root:password@tcp(mysql)/local?parseTime=true"), &gorm.Config{})
+	db, err = gorm.Open(mysql.Open(fmt.Sprintf("%s?parseTime=true", os.Getenv("DB_DSN"))), &gorm.Config{})
 	fatalErr(err)
 
 	db.AutoMigrate(&User{})
@@ -93,7 +94,7 @@ func main() {
 	r.HandleFunc("/users", store).Methods("POST").Name("users.store")
 
 	http.Handle("/", r)
-	log.Fatal(http.ListenAndServe(":80", nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("APP_PORT")), nil))
 }
 
 func display(w http.ResponseWriter, view string, data interface{}) {
