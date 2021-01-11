@@ -1,4 +1,4 @@
-{{ template "header.html" . }}
+{{ define "content" }}
   <h1>User: {{.UserName}}</h1>
   <table class="table">
     <thead>
@@ -30,4 +30,4 @@
       </tr>
     </tbody>
   </table>
-{{ template "footer.html" . }}
+{{ end }}

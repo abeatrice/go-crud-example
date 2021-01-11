@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -23,9 +24,7 @@ type user struct {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	tpl, err := template.ParseGlob("./templates/*")
-	logErr(err)
-	logErr(tpl.ExecuteTemplate(w, "home.html", nil))
+	display(w, "home", nil)
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +46,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 		users = append(users, u)
 	}
 
-	display(w, "index.html", users)
+	display(w, "index", users)
 }
 
 func show(w http.ResponseWriter, r *http.Request) {
@@ -64,11 +63,11 @@ func show(w http.ResponseWriter, r *http.Request) {
 	err = row.Scan(&u.ID, &u.UserName, &u.FirstName, &u.LastName, &u.Email)
 	logErr(err)
 
-	display(w, "show.html", u)
+	display(w, "show", u)
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
-	display(w, "create.html", nil)
+	display(w, "create", nil)
 }
 
 func store(w http.ResponseWriter, r *http.Request) {
@@ -108,9 +107,11 @@ func main() {
 }
 
 func display(w http.ResponseWriter, view string, data interface{}) {
-	tpl, err := template.ParseGlob("./templates/*")
-	logErr(err)
-	logErr(tpl.ExecuteTemplate(w, view, data))
+	tpl := template.Must(template.ParseFiles(
+		"templates/layout.html",
+		fmt.Sprintf("templates/%s.html", view),
+	))
+	logErr(tpl.Execute(w, data))
 }
 
 func logErr(err error) {

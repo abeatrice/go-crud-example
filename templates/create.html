@@ -1,4 +1,4 @@
-{{ template "header.html" . }}
+{{ define "content" }}
   <h1>Create User</h1>
   <form action="/users" method="POST">
     <div class="mb-3">
@@ -19,4 +19,4 @@
     </div>
     <button type="submit" class="btn btn-primary mb-3">Submit</button>
   </form>
-{{ template "footer.html" . }}
+{{ end }}
