@@ -1,3 +1,33 @@
 {{ template "header.html" . }}
   <h1>User: {{.UserName}}</h1>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">User ID</th>
+        <td>{{.ID}}</td>
+      </tr>
+      <tr>
+        <th scope="row">User Name</th>
+        <td>{{.UserName}}</td>
+      </tr>
+      <tr>
+        <th scope="row">First Name</th>
+        <td>{{.FirstName}}</td>
+      </tr>
+      <tr>
+        <th scope="row">User Name</th>
+        <td>{{.LastName}}</td>
+      </tr>
+      <tr>
+        <th scope="row">Email</th>
+        <td>{{.Email}}</td>
+      </tr>
+    </tbody>
+  </table>
 {{ template "footer.html" . }}

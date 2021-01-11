@@ -1,27 +1,30 @@
 {{ template "header.html" . }}
+  <div class="d-flex justify-content-between align-items-center">
     <h1>Users</h1>
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">User Name</th>
-                <th scope="col">First Name</th>
-                <th scope="col">Last Name</th>
-                <th scope="col">Email</th>
-            </tr>
-        </thead>
-        <tbody>
-        {{range .}}
-            <tr>
-                <td>
-                    <a href="/users/{{.ID}}" class="link-primary">{{.ID}}</a>
-                </td>
-                <td>{{.UserName}}</td>
-                <td>{{.FirstName}}</td>
-                <td>{{.LastName}}</td>
-                <td>{{.Email}}</td>
-            </tr>
-        {{end}}
-        </tbody>
-    </table>
+    <a href="/users/create" class="btn btn-primary">Create</a>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">User Name</th>
+        <th scope="col">First Name</th>
+        <th scope="col">Last Name</th>
+        <th scope="col">Email</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{range .}}
+      <tr>
+        <td>
+          <a href="/users/{{.ID}}" class="link-primary">{{.ID}}</a>
+        </td>
+        <td>{{.UserName}}</td>
+        <td>{{.FirstName}}</td>
+        <td>{{.LastName}}</td>
+        <td>{{.Email}}</td>
+      </tr>
+    {{end}}
+    </tbody>
+  </table>
 {{ template "footer.html" . }}

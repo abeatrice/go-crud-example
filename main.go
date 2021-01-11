@@ -47,9 +47,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 		users = append(users, u)
 	}
 
-	tpl, err := template.ParseGlob("./templates/*")
-	logErr(err)
-	logErr(tpl.ExecuteTemplate(w, "index.html", users))
+	display(w, "index.html", users)
 }
 
 func show(w http.ResponseWriter, r *http.Request) {
@@ -66,9 +64,32 @@ func show(w http.ResponseWriter, r *http.Request) {
 	err = row.Scan(&u.ID, &u.UserName, &u.FirstName, &u.LastName, &u.Email)
 	logErr(err)
 
-	tpl, err := template.ParseGlob("./templates/*")
+	display(w, "show.html", u)
+}
+
+func create(w http.ResponseWriter, r *http.Request) {
+	display(w, "create.html", nil)
+}
+
+func store(w http.ResponseWriter, r *http.Request) {
+	logErr(r.ParseForm())
+	user := user{
+		UserName:  r.Form.Get("UserName"),
+		FirstName: r.Form.Get("FirstName"),
+		LastName:  r.Form.Get("LastName"),
+		Email:     r.Form.Get("Email"),
+	}
+
+	stmt, err := db.Prepare(`
+		INSERT INTO users (username, first_name, last_name, email)
+		VALUES (?, ?, ?, ?)
+	`)
 	logErr(err)
-	logErr(tpl.ExecuteTemplate(w, "show.html", u))
+	defer stmt.Close()
+
+	stmt.Exec(user.UserName, user.FirstName, user.LastName, user.Email)
+
+	index(w, r)
 }
 
 func main() {
@@ -79,9 +100,17 @@ func main() {
 	r.HandleFunc("/", home).Methods("GET").Name("home")
 	r.HandleFunc("/users", index).Methods("GET").Name("users.index")
 	r.HandleFunc("/users/{id:[0-9]+}", show).Methods("GET").Name("users.show")
+	r.HandleFunc("/users/create", create).Methods("GET").Name("users.create")
+	r.HandleFunc("/users", store).Methods("POST").Name("users.store")
 	http.Handle("/", r)
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":80", nil))
+}
+
+func display(w http.ResponseWriter, view string, data interface{}) {
+	tpl, err := template.ParseGlob("./templates/*")
+	logErr(err)
+	logErr(tpl.ExecuteTemplate(w, view, data))
 }
 
 func logErr(err error) {
