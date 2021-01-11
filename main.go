@@ -46,6 +46,39 @@ func show(w http.ResponseWriter, r *http.Request) {
 	display(w, "show", user)
 }
 
+func edit(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	var user User
+	db.First(&user, vars["id"])
+	display(w, "edit", user)
+}
+
+func update(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	var user User
+	db.First(&user, vars["id"])
+
+	logErr(r.ParseForm())
+	user.UserName = r.Form.Get("UserName")
+	user.FirstName = r.Form.Get("FirstName")
+	user.LastName = r.Form.Get("LastName")
+	user.Email = r.Form.Get("Email")
+
+	err = validate.Struct(user)
+	if err != nil {
+		edit(w, r)
+		return
+	}
+
+	db.Save(&user)
+	index(w, r)
+}
+
+func destroy(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("delete hit")
+	index(w, r)
+}
+
 func create(w http.ResponseWriter, r *http.Request) {
 	logErr(r.ParseForm())
 	data := struct {
@@ -89,9 +122,12 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", home).Methods("GET").Name("home")
 	r.HandleFunc("/users", index).Methods("GET").Name("users.index")
-	r.HandleFunc("/users/{id:[0-9]+}", show).Methods("GET").Name("users.show")
 	r.HandleFunc("/users/create", create).Methods("GET").Name("users.create")
 	r.HandleFunc("/users", store).Methods("POST").Name("users.store")
+	r.HandleFunc("/users/{id:[0-9]+}", show).Methods("GET").Name("users.show")
+	r.HandleFunc("/users/{id:[0-9]+}/edit", edit).Methods("GET").Name("users.edit")
+	r.HandleFunc("/users/{id:[0-9]+}", update).Methods("POST", "PUT", "PATCH").Name("users.update")
+	r.HandleFunc("/users/{id:[0-9]+}", destroy).Methods("POST", "DELETE").Name("users.destroy")
 
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("APP_PORT")), nil))

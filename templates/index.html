@@ -6,7 +6,7 @@
   <table class="table">
     <thead>
       <tr>
-        <th scope="col">#</th>
+        <th scope="col">Actions</th>
         <th scope="col">User Name</th>
         <th scope="col">First Name</th>
         <th scope="col">Last Name</th>
@@ -17,7 +17,17 @@
     {{range .}}
       <tr>
         <td>
-          <a href="/users/{{.ID}}" class="link-primary">{{.ID}}</a>
+          <div class="d-flex justify-content-start align-items-center">
+            <div class="px-2"><a href="/users/{{.ID}}" class="link-primary">Show</a></div>
+            <div class="px-2"><a href="/users/{{.ID}}/edit" class="link-primary">Edit</a></div>
+            <div class="p-0 m-0">
+              <form action="/users/{{.ID}}" method="POST">
+                <input type="hidden" name="_method" value="DELETE">
+                <input type="hidden" name="id" value="{{.ID}}">
+                <button type="submit" class="btn btn-link link-primary">Delete</button>
+              </form>
+            </div>
+          </div>
         </td>
         <td>{{.UserName}}</td>
         <td>{{.FirstName}}</td>

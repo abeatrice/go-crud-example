@@ -1,0 +1,23 @@
+{{ define "content" }}
+  <h1>Edit User: {{.UserName}}</h1>
+  <form action="/users/{{.ID}}" method="POST">
+    <input type="hidden" name="_method" value="PUT">
+    <div class="mb-3">
+      <label for="UserName" class="form-label">User Name</label>
+      <input type="text" class="form-control" id="UserName" name="UserName" value="{{.UserName}}" autofocus>
+    </div>
+    <div class="mb-3">
+      <label for="FirstName" class="form-label">First Name</label>
+      <input type="text" class="form-control" id="FirstName" name="FirstName" value="{{.FirstName}}">
+    </div>
+    <div class="mb-3">
+      <label for="LastName" class="form-label">Last Name</label>
+      <input type="text" class="form-control" id="LastName" name="LastName" value="{{.LastName}}">
+    </div>
+    <div class="mb-3">
+      <label for="Email" class="form-label">Email</label>
+      <input type="email" class="form-control" id="Email" name="Email" value="{{.Email}}">
+    </div>
+    <button type="submit" class="btn btn-primary mb-3">Submit</button>
+  </form>
+{{ end }}
