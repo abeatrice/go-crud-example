@@ -1,21 +1,25 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/gorilla/mux"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
-var db *sql.DB
+var db *gorm.DB
 var err error
 
-type user struct {
+// User ...
+type User struct {
+	gorm.Model
 	ID        int
 	UserName  string
 	FirstName string
@@ -28,42 +32,16 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-	stmt, err := db.Prepare(`
-		SELECT id, username, first_name, last_name, email
-		FROM users
-	`)
-	logErr(err)
-	defer stmt.Close()
-
-	rows, err := stmt.Query()
-	logErr(err)
-
-	var users []user
-	for rows.Next() {
-		var u user
-		err = rows.Scan(&u.ID, &u.UserName, &u.FirstName, &u.LastName, &u.Email)
-		logErr(err)
-		users = append(users, u)
-	}
-
+	var users []User
+	db.Scopes(Paginate(r)).Find(&users)
 	display(w, "index", users)
 }
 
 func show(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
-
-	row := db.QueryRow(`
-		SELECT id, username, first_name, last_name, email
-		FROM users
-		WHERE id = ?
-	`, id)
-
-	var u user
-	err = row.Scan(&u.ID, &u.UserName, &u.FirstName, &u.LastName, &u.Email)
-	logErr(err)
-
-	display(w, "show", u)
+	var user User
+	db.First(&user, vars["id"])
+	display(w, "show", user)
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
@@ -72,28 +50,21 @@ func create(w http.ResponseWriter, r *http.Request) {
 
 func store(w http.ResponseWriter, r *http.Request) {
 	logErr(r.ParseForm())
-	user := user{
+	user := User{
 		UserName:  r.Form.Get("UserName"),
 		FirstName: r.Form.Get("FirstName"),
 		LastName:  r.Form.Get("LastName"),
 		Email:     r.Form.Get("Email"),
 	}
-
-	stmt, err := db.Prepare(`
-		INSERT INTO users (username, first_name, last_name, email)
-		VALUES (?, ?, ?, ?)
-	`)
-	logErr(err)
-	defer stmt.Close()
-
-	stmt.Exec(user.UserName, user.FirstName, user.LastName, user.Email)
-
+	db.Create(&user)
 	index(w, r)
 }
 
 func main() {
-	db, err = sql.Open("mysql", "root:password@tcp(mysql)/local")
+	db, err = gorm.Open(mysql.Open("root:password@tcp(mysql)/local?parseTime=true"), &gorm.Config{})
 	fatalErr(err)
+
+	db.AutoMigrate(&User{})
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", home).Methods("GET").Name("home")
@@ -123,5 +94,27 @@ func logErr(err error) {
 func fatalErr(err error) {
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+// Paginate ...
+func Paginate(r *http.Request) func(db *gorm.DB) *gorm.DB {
+	query := r.URL.Query()
+	return func(db *gorm.DB) *gorm.DB {
+		page, _ := strconv.Atoi(query.Get("page"))
+		if page == 0 {
+			page = 1
+		}
+
+		pageSize, _ := strconv.Atoi(query.Get("page_size"))
+		switch {
+		case pageSize > 100:
+			pageSize = 100
+		case pageSize <= 0:
+			pageSize = 10
+		}
+
+		offset := (page - 1) * pageSize
+		return db.Offset(offset).Limit(pageSize)
 	}
 }
